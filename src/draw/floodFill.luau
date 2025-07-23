@@ -77,7 +77,8 @@ return function<T>(object: types.DrawableObject<T>, startX: number, startY: numb
 
 				if sy > 0 then
 					local aboveIdx = idx - (w * 4)
-					if readU32(bfr, aboveIdx) == target then
+					local aboveIsTarget = readU32(bfr, aboveIdx) == target
+					if aboveIsTarget then
 						if not spanFilledAbove then
 							top += 1
 							stack[top] = { x, sy - 1 }
@@ -85,12 +86,22 @@ return function<T>(object: types.DrawableObject<T>, startX: number, startY: numb
 						end
 					else
 						spanFilledAbove = false
+						-- check diagonals at a color boundary
+						if x > 0 and readU32(bfr, aboveIdx - 4) == target then
+							top += 1
+							stack[top] = { x - 1, sy - 1 }
+						end
+						if x < w - 1 and readU32(bfr, aboveIdx + 4) == target then
+							top += 1
+							stack[top] = { x + 1, sy - 1 }
+						end
 					end
 				end
 
 				if sy < h - 1 then
 					local belowIdx = idx + (w * 4)
-					if readU32(bfr, belowIdx) == target then
+					local belowIsTarget = readU32(bfr, belowIdx) == target
+					if belowIsTarget then
 						if not spanFilledBelow then
 							top += 1
 							stack[top] = { x, sy + 1 }
@@ -98,6 +109,15 @@ return function<T>(object: types.DrawableObject<T>, startX: number, startY: numb
 						end
 					else
 						spanFilledBelow = false
+						-- check diagonals at a color boundary
+						if x > 0 and readU32(bfr, belowIdx - 4) == target then
+							top += 1
+							stack[top] = { x - 1, sy + 1 }
+						end
+						if x < w - 1 and readU32(bfr, belowIdx + 4) == target then
+							top += 1
+							stack[top] = { x + 1, sy + 1 }
+						end
 					end
 				end
 
